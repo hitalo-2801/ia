@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Planilha de Inspeção</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    tr {
+    background-color: #ffffff;
+    }
+
+
+    tr:nth-child(even) {
+    background-color: #f2f2f2;
+    }
+    th, td {
+      border: 1px solid #131313;
+      padding: 5px;
+      text-align: center;
+      background-repeat: repeat-y, ;
+    }
+    textarea {
+      width: 95%;
+      height: 60px;
+    }
+    .status {
+      width: 80px;
+      height:30px;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .verde {
+      background-color: rgb(255, 0, 0);
+      border: solid;
+      border-color:black;
+    
+    
+    }
+    .vermelho {
+      background-color: rgb(30, 255, 0);
+      border: solid;
+      border-color:black;
+    }
+    .obs {
+      display: none;
+    }
+    button{
+        background-color: transparent;
+        border: soloid;
+        border-color: black;
+        
+    }
+    #aaa{
+        background-color: #f2f2f2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📋 Planilha de Inspeção</h2>
+<button onclick="novaLinha()" id="aaa">➕ Nova Linha
+</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Inspeção</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="tabela"></tbody>
+</table>
+
+<script>
+  let dados = JSON.parse(localStorage.getItem("planilha")) || [];
+  const tabela = document.getElementById("tabela");
+
+  function salvar() {
+    localStorage.setItem("planilha", JSON.stringify(dados));
+  }
+
+  function renderizar() {
+    tabela.innerHTML = "";
+    dados.forEach((linha, i) => {
+      const tr = document.createElement("tr");
+
+      // Coluna Nome
+      const tdNome = document.createElement("td");
+      const inputNome = document.createElement("input");
+      inputNome.value = linha.nome;
+      inputNome.oninput = () => {
+        dados[i].nome = inputNome.value;
+        salvar();
+      };
+      tdNome.appendChild(inputNome);
+
+      // Coluna Inspeção
+      const tdInspecao = document.createElement("td");
+      const btnInspecao = document.createElement("button");
+      btnInspecao.textContent = "Inspeção";
+      btnInspecao.onclick = () => {
+        obs.style.display = obs.style.display === "none" ? "block" : "none";
+      };
+
+      const obs = document.createElement("textarea");
+      obs.className = "obs";
+      obs.value = linha.obs;
+      obs.oninput = () => {
+        dados[i].obs = obs.value;
+        salvar();
+      };
+
+      tdInspecao.appendChild(btnInspecao);
+      tdInspecao.appendChild(document.createElement("br"));
+      tdInspecao.appendChild(obs);
+
+      // Coluna Status
+      const tdStatus = document.createElement("td");
+      const btnStatus = document.createElement("button");
+      btnStatus.className = "status " + linha.status;
+      btnStatus.textContent = linha.status === "verde" ? "" : "";
+      btnStatus.onclick = () => {
+        dados[i].status = linha.status === "verde" ? "vermelho" : "verde";
+        salvar();
+        renderizar();
+      };
+      tdStatus.appendChild(btnStatus);
+
+      tr.appendChild(tdNome);
+      tr.appendChild(tdInspecao);
+      tr.appendChild(tdStatus);
+      tabela.appendChild(tr);
+    });
+  }
+
+  function novaLinha() {
+    dados.push({ nome: "", obs: "", status: "verde" });
+    salvar();
+    renderizar();
+  }
+
+  renderizar();
+</script>
+
+</body>
+</html>
