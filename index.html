@@ -62,7 +62,7 @@
 
 <body>
 
-<h2>📋 Planilha de Inspeção</h2>
+<h2>Passagem de serviço</h2>
 
 <button onclick="novaLinha()">➕ Nova Linha</button>
 <button onclick="voltar()">↩️ Desfazer</button>
@@ -71,7 +71,7 @@
   <thead>
     <tr>
       <th>Nome</th>
-      <th>Inspeção</th>
+      <th>Observações</th>
       <th>Status</th>
     </tr>
   </thead>
@@ -127,7 +127,7 @@
       // --- Coluna Inspeção ---
       const tdInspecao = document.createElement("td");
       const btnInspecao = document.createElement("button");
-      btnInspecao.textContent = "Inspeção";
+      btnInspecao.textContent = "Observação";
       btnInspecao.className = "inspecao" + (linha.obs ? " amarelo" : "");
       
       const obs = document.createElement("textarea");
