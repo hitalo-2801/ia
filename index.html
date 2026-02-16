@@ -5,91 +5,87 @@
   <title>Planilha de Inspeção</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 10px;
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f0f2f5; }
+    h2 { color: #1c1e21; text-align: center; }
+    
+    .controles { margin-bottom: 20px; text-align: center; }
+    .btn-acao { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 0 5px; transition: 0.2s; }
+    .btn-nova { background-color: #007bff; color: white; }
+    .btn-desfazer { background-color: #6c757d; color: white; }
+    .btn-acao:hover { opacity: 0.9; transform: translateY(-1px); }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: center; }
+    th { background-color: #f8f9fa; color: #4b4f56; text-transform: uppercase; font-size: 12px; }
 
-    th, td {
-      border: 1px solid #999;
-      padding: 8px;
-      text-align: center;
+    input[type="text"] { width: 90%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
+    input[type="text"]:focus { border-color: #007bff; }
+    
+    /* Ajuste do botão de Status */
+    .status { 
+      width: 45px; 
+      height: 45px; 
+      border: none; 
+      cursor: pointer; 
+      border-radius: 8px; 
+      font-size: 20px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      margin: 0 auto;
+      transition: background 0.3s;
     }
+    .verde { background-color: #28a745; color: white; }
+    .vermelho { background-color: #dc3545; color: white; }
 
-    textarea {
-      width: 95%;
-      height: 60px;
-      margin-top: 5px;
-    }
+    .inspecao { background-color: #e9ecef; border: 1px solid #ced4da; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-size: 13px; }
+    .amarelo { background-color: #ffc107; border-color: #ffc107; color: #000; }
 
-    .status {
-      width: 80px;
-      height: 30px;
-      border: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 4px;
-    }
+    textarea { width: 95%; height: 80px; margin-top: 8px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; display: none; resize: vertical; }
 
-    .verde { background-color: green; }
-    .vermelho { background-color: red; }
-
-    .inspecao {
-      background-color: #e0e0e0;
-      border: 1px solid #ccc;
-      padding: 6px 12px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    .amarelo {
-      background-color: #ffd700;
-      font-weight: bold;
-    }
-
-    .obs {
-      display: none;
-    }
+    #container-texto { margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; border-left: 6px solid #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    #textop { white-space: pre-wrap; line-height: 1.8; font-family: 'Courier New', Courier, monospace; font-size: 15px; color: #333; }
   </style>
 </head>
 
 <body>
 
-<h2>Passagem de serviço</h2>
+<h2>📋 Passagem de Serviço</h2>
 
-<button onclick="novaLinha()">➕ Nova Linha</button>
-<button onclick="voltar()">↩️ Desfazer</button>
+<div class="controles">
+  <button class="btn-acao btn-nova" onclick="novaLinha()">➕ Nova Linha</button>
+  <button class="btn-acao btn-desfazer" onclick="voltar()">↩️ Desfazer</button>
+</div>
 
 <table>
   <thead>
     <tr>
-      <th>Nome</th>
-      <th>Observações</th>
-      <th>Status</th>
+      <th style="width: 30%;">Nome</th>
+      <th style="width: 50%;">Observações</th>
+      <th style="width: 20%;">Status</th>
     </tr>
   </thead>
   <tbody id="tabela"></tbody>
 </table>
+
+<section id="container-texto">
+  <strong>📝 Resumo Gerado:</strong>
+  <p id="textop"></p>
+</section>
 
 <script>
   let dados = JSON.parse(localStorage.getItem("planilha")) || [];
   let historico = [];
 
   const tabela = document.getElementById("tabela");
+  const textoSaida = document.getElementById("textop");
 
   function salvar() {
     localStorage.setItem("planilha", JSON.stringify(dados));
+    atualizarTexto();
   }
 
   function salvarHistorico() {
-    // Salva o estado atual antes de uma mudança importante
     historico.push(JSON.stringify(dados));
     if (historico.length > 30) historico.shift();
   }
@@ -104,79 +100,84 @@
     }
   }
 
+  function atualizarTexto() {
+    if (dados.length === 0) {
+      textoSaida.innerHTML = "Aguardando dados...";
+      return;
+    }
+
+    const formatado = dados.map(item => {
+      const emoji = item.status === "verde" ? "✅" : "❌";
+      const nome = item.nome || "Vazio";
+      const obs = item.obs ? `: ${item.obs}` : "";
+      return `${nome}, ${emoji}${obs};`;
+    });
+
+    textoSaida.innerHTML = formatado.join("<br>");
+  }
+
   function renderizar() {
     tabela.innerHTML = "";
 
     dados.forEach((linha, i) => {
       const tr = document.createElement("tr");
 
-      // --- Coluna Nome ---
+      // NOME
       const tdNome = document.createElement("td");
       const inputNome = document.createElement("input");
+      inputNome.type = "text";
+      inputNome.placeholder = "Digite o nome...";
       inputNome.value = linha.nome;
-      
-      // Salva no histórico apenas quando o usuário começa a editar
       inputNome.onfocus = () => salvarHistorico();
-      
-      inputNome.oninput = () => {
-        dados[i].nome = inputNome.value;
-        salvar();
-      };
+      inputNome.oninput = () => { dados[i].nome = inputNome.value; salvar(); };
       tdNome.appendChild(inputNome);
 
-      // --- Coluna Inspeção ---
-      const tdInspecao = document.createElement("td");
-      const btnInspecao = document.createElement("button");
-      btnInspecao.textContent = "Observação";
-      btnInspecao.className = "inspecao" + (linha.obs ? " amarelo" : "");
+      // OBSERVAÇÃO
+      const tdObs = document.createElement("td");
+      const btnObs = document.createElement("button");
+      btnObs.textContent = linha.obs ? "📝 Editar Obs." : "➕ Add Obs.";
+      btnObs.className = "inspecao" + (linha.obs ? " amarelo" : "");
       
-      const obs = document.createElement("textarea");
-      obs.className = "obs";
-      obs.value = linha.obs;
-      
-      // Mantém aberto se já tiver texto
-      if (linha.obs) obs.style.display = "block";
+      const areaTexto = document.createElement("textarea");
+      areaTexto.value = linha.obs;
+      if (linha.obs) areaTexto.style.display = "block";
 
-      btnInspecao.onclick = () => {
-        const estaAberto = obs.style.display === "block";
-        obs.style.display = estaAberto ? "none" : "block";
+      btnObs.onclick = () => {
+        const estaAberto = areaTexto.style.display === "block";
+        areaTexto.style.display = estaAberto ? "none" : "block";
       };
 
-      obs.onfocus = () => salvarHistorico();
-
-      obs.oninput = () => {
-        dados[i].obs = obs.value;
+      areaTexto.onfocus = () => salvarHistorico();
+      areaTexto.oninput = () => {
+        dados[i].obs = areaTexto.value;
+        btnObs.className = "inspecao" + (areaTexto.value.trim() !== "" ? " amarelo" : "");
+        btnObs.textContent = areaTexto.value.trim() !== "" ? "📝 Editar Obs." : "➕ Add Obs.";
         salvar();
-        // Atualiza a cor do botão sem renderizar a tabela inteira
-        if (obs.value.trim() !== "") {
-          btnInspecao.classList.add("amarelo");
-        } else {
-          btnInspecao.classList.remove("amarelo");
-        }
       };
+      tdObs.appendChild(btnObs);
+      tdObs.appendChild(areaTexto);
 
-      tdInspecao.appendChild(btnInspecao);
-      tdInspecao.appendChild(obs);
-
-      // --- Coluna Status ---
+      // STATUS (BOTÃO COM EMOJI)
       const tdStatus = document.createElement("td");
       const btnStatus = document.createElement("button");
       btnStatus.className = "status " + linha.status;
-      btnStatus.textContent = linha.status === "verde" ? "" : "";
+      // Coloca o emoji dentro do botão para ele ter tamanho
+      btnStatus.textContent = linha.status === "verde" ? "✅" : "❌";
       
       btnStatus.onclick = () => {
         salvarHistorico();
         dados[i].status = linha.status === "verde" ? "vermelho" : "verde";
         salvar();
-        renderizar(); // Aqui pode renderizar pois o clique é uma ação única
+        renderizar();
       };
       tdStatus.appendChild(btnStatus);
 
       tr.appendChild(tdNome);
-      tr.appendChild(tdInspecao);
+      tr.appendChild(tdObs);
       tr.appendChild(tdStatus);
       tabela.appendChild(tr);
     });
+    atualizarTexto();
   }
 
   function novaLinha() {
@@ -186,7 +187,6 @@
     renderizar();
   }
 
-  // Inicialização
   renderizar();
 </script>
 
